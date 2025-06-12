@@ -15,14 +15,27 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
-      - name: Install dependencies
+
+      - name: Install backend dependencies
         run: npm ci
+        working-directory: ./backend
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: ./frontend
+
+      - name: Install sfu dependencies
+        run: npm ci
+        working-directory: ./sfu
+
       - name: Lint backend
         run: npm run lint
         working-directory: ./backend
+
       - name: Lint frontend
         run: npm run lint
         working-directory: ./frontend
+
       - name: Lint sfu
         run: npm run lint
         working-directory: ./sfu
@@ -36,14 +49,27 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
-      - name: Install dependencies
+
+      - name: Install backend dependencies
         run: npm ci
+        working-directory: ./backend
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: ./frontend
+
+      - name: Install sfu dependencies
+        run: npm ci
+        working-directory: ./sfu
+
       - name: Test backend
         run: npm test
         working-directory: ./backend
+
       - name: Test frontend
         run: npm test
         working-directory: ./frontend
+
       - name: Test sfu
         run: npm test
         working-directory: ./sfu
