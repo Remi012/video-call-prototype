@@ -6,34 +6,65 @@ on:
 
 jobs:
   build-and-push:
+    name: Build & Push Docker Images
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      # 1. リポジトリを取得
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
+      # 2. Docker Hub にログイン（要シークレット設定）
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 3. Backend イメージをビルド＆プッシュ
       - name: Build & Push Backend
         run: |
-          docker build -t registry.example.com/videocall-backend:${{ github.sha }} -f backend/Dockerfile .
-          docker push registry.example.com/videocall-backend:${{ github.sha }}
+          docker build \
+            -t docker.io/remi012/videocall-backend:${{ github.sha }} \
+            -f backend/Dockerfile .
+          docker push docker.io/remi012/videocall-backend:${{ github.sha }}
 
+      # 4. Frontend イメージをビルド＆プッシュ
       - name: Build & Push Frontend
         run: |
-          docker build -t registry.example.com/videocall-frontend:${{ github.sha }} -f frontend/Dockerfile .
-          docker push registry.example.com/videocall-frontend:${{ github.sha }}
+          docker build \
+            -t docker.io/remi012/videocall-frontend:${{ github.sha }} \
+            -f frontend/Dockerfile .
+          docker push docker.io/remi012/videocall-frontend:${{ github.sha }}
 
+      # 5. SFU イメージをビルド＆プッシュ
       - name: Build & Push SFU
         run: |
-          docker build -t registry.example.com/videocall-sfu:${{ github.sha }} -f sfu/Dockerfile .
-          docker push registry.example.com/videocall-sfu:${{ github.sha }}
+          docker build \
+            -t docker.io/remi012/videocall-sfu:${{ github.sha }} \
+            -f sfu/Dockerfile .
+          docker push docker.io/remi012/videocall-sfu:${{ github.sha }}
 
   deploy:
+    name: Helm Deploy to Kubernetes
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      # 1. リポジトリを再取得
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Helm Deploy
+      # 2. Helm をセットアップ（必要に応じてバージョン指定）
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+
+      # 3. Helm upgrade/install 実行
+      - name: Deploy with Helm
         run: |
           helm upgrade --install videocall ./infra/helm-chart \
+            --set image.backend.repository=docker.io/remi012/videocall-backend \
             --set image.backend.tag=${{ github.sha }} \
+            --set image.frontend.repository=docker.io/remi012/videocall-frontend \
             --set image.frontend.tag=${{ github.sha }} \
+            --set image.sfu.repository=docker.io/remi012/videocall-sfu \
             --set image.sfu.tag=${{ github.sha }}
