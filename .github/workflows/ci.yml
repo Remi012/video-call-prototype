@@ -11,30 +11,64 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
 
+      # Backend 依存キャッシュ
+      - name: Cache backend modules
+        uses: actions/cache@v3
+        with:
+          path: backend/node_modules
+          key: ${{ runner.os }}-backend-${{ hashFiles('backend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-backend-
+
       - name: Install backend dependencies
         run: npm ci
         working-directory: ./backend
-
-      - name: Install frontend dependencies
-        run: npm ci
-        working-directory: ./frontend
-
-      - name: Install sfu dependencies
-        run: npm ci
-        working-directory: ./sfu
 
       - name: Lint backend
         run: npm run lint
         working-directory: ./backend
 
+      # Frontend 依存キャッシュ
+      - name: Cache frontend modules
+        uses: actions/cache@v3
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-frontend-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-frontend-
+
+      # npm リトライ設定
+      - name: Configure npm for retries
+        run: |
+          npm config set fetch-retries 5
+          npm config set registry https://registry.npmjs.org/
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: ./frontend
+
       - name: Lint frontend
         run: npm run lint
         working-directory: ./frontend
+
+      # SFU 依存キャッシュ
+      - name: Cache sfu modules
+        uses: actions/cache@v3
+        with:
+          path: sfu/node_modules
+          key: ${{ runner.os }}-sfu-${{ hashFiles('sfu/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-sfu-
+
+      - name: Install sfu dependencies
+        run: npm ci
+        working-directory: ./sfu
 
       - name: Lint sfu
         run: npm run lint
@@ -45,30 +79,60 @@ jobs:
     needs: lint
     steps:
       - uses: actions/checkout@v3
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
 
+      - name: Cache backend modules
+        uses: actions/cache@v3
+        with:
+          path: backend/node_modules
+          key: ${{ runner.os }}-backend-${{ hashFiles('backend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-backend-
+
       - name: Install backend dependencies
         run: npm ci
         working-directory: ./backend
-
-      - name: Install frontend dependencies
-        run: npm ci
-        working-directory: ./frontend
-
-      - name: Install sfu dependencies
-        run: npm ci
-        working-directory: ./sfu
 
       - name: Test backend
         run: npm test
         working-directory: ./backend
 
+      - name: Cache frontend modules
+        uses: actions/cache@v3
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-frontend-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-frontend-
+
+      - name: Configure npm for retries
+        run: |
+          npm config set fetch-retries 5
+          npm config set registry https://registry.npmjs.org/
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: ./frontend
+
       - name: Test frontend
         run: npm test
         working-directory: ./frontend
+
+      - name: Cache sfu modules
+        uses: actions/cache@v3
+        with:
+          path: sfu/node_modules
+          key: ${{ runner.os }}-sfu-${{ hashFiles('sfu/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-sfu-
+
+      - name: Install sfu dependencies
+        run: npm ci
+        working-directory: ./sfu
 
       - name: Test sfu
         run: npm test
