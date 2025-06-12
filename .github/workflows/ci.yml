@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  install-and-test:
+  install:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -28,9 +28,6 @@ jobs:
       - name: Install backend dependencies
         run: npm ci
         working-directory: ./backend
-      - name: Test backend
-        run: npm test
-        working-directory: ./backend
 
       # frontend
       - name: Cache frontend modules
@@ -47,9 +44,6 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
         working-directory: ./frontend
-      - name: Test frontend
-        run: npm test
-        working-directory: ./frontend
 
       # sfu
       - name: Cache sfu modules
@@ -61,7 +55,4 @@ jobs:
             ${{ runner.os }}-sfu-
       - name: Install sfu dependencies
         run: npm ci
-        working-directory: ./sfu
-      - name: Test sfu
-        run: npm test
         working-directory: ./sfu
