@@ -41,8 +41,8 @@ jobs:
         run: |
           npm config set fetch-retries 5
           npm config set registry https://registry.npmjs.org/
-      - name: Install frontend dependencies
-        run: npm ci
+      - name: Install frontend dependencies (force-retry)
+        run: npm ci --force
         working-directory: ./frontend
 
       # sfu
